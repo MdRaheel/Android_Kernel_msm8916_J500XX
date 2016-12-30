@@ -884,15 +884,14 @@ void disassociate_ctty(int on_exit)
 		put_pid(tty->pgrp);
 		tty->session = NULL;
 		tty->pgrp = NULL;
-		spin_unlock_irqrestore(&tty->ctrl_lock, flags);
-		tty_kref_put(tty);
+    tty = tty_kref_get(current->signal->tty);
 	} else {
 #ifdef TTY_DEBUG_HANGUP
 		printk(KERN_DEBUG "error attempted to write to tty [0x%p]"
 		       " = NULL", tty);
 #endif
 	}
-
+    spin_unlock_irq(&current->sighand->siglock);
 	/* Now clear signal->tty under the lock */
 	read_lock(&tasklist_lock);
 	session_clear_tty(task_session(current));
